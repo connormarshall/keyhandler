@@ -1,5 +1,11 @@
 export class KeyHandler {
 
+  /* TODO:
+   * Update from event.keycode / event.which
+   * Improve elegance if possible
+   * Add multi-key macros (restructure as tree?)
+   */
+
   /* Properties:
    * keys - boolean array holding whether or not the key is pressed
    * continuous - boolean array holding whether or not macros should be executed continuously
@@ -13,15 +19,16 @@ export class KeyHandler {
     this.macros = [];
 
     //Key down event
-    document.addEventListener("keydown", (e) => {
-      let code = event.which || event.keyCode
+    document.addEventListener("keydown", (event) => {
+      let code = event.which || event.keyCode;
+      let macro = this.macros[code];
 
       //If the key has been pressed already and continuous is true
       if (this.keys[code] && this.continuous[code]) {
 
         //Execute callback
         if(typeof this.macros[code] !== "undefined")
-        	this.macros[code]();
+        	macro.callback.apply(null, macro.arguments);
 
         //If the key has not already been pressed (prevents spamming)
       } else if (!this.keys[code]) {
@@ -29,14 +36,14 @@ export class KeyHandler {
 
         //Execute callback
         if(typeof this.macros[code] !== "undefined")
-        	this.macros[code]();
+        	macro.callback.apply(null, macro.arguments);
 
       }
 
     });
 
     //Key up event
-    document.addEventListener("keyup", (e) => {
+    document.addEventListener("keyup", (event) => {
       let code = event.which || event.keyCode;
       this.keys[code] = false;
 
@@ -55,10 +62,10 @@ export class KeyHandler {
     return this.keys[code];
   }
 
-  //Assigns a function as a macro for this keypress
- 	callWhenPressed(key, func) {
-    //If the key is currently pressed, set callback
-    this.macros[this.codeOf(key)] = func;
+  //Assigns a function as a macro for this keypress. Arbitrary amount of arguments
+  callWhenPressed(key, func, ...args) {
+    let macro = {callback: func, arguments: args};
+    this.macros[this.codeOf(key)] = macro;
 
   }
 
